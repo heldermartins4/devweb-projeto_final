@@ -1,51 +1,95 @@
 import * as C from "./styles";
-
 import { useContext, useEffect, useState } from "react";
 import SocketContext from "../../contexts/SocketContext";
 import { useRouter } from "next/router";
 import axios from "axios";
 import FormData from "form-data";
-
-
+import { host } from "../../utils/host";
 
 export const Profile = () => {
   const socket = useContext(SocketContext);
   const router = useRouter();
-  const BaseURL = process.env.HOST_CLIENTSERVER || "http://ec2-3-17-183-122.us-east-2.compute.amazonaws.com:5000";
+  const BaseURL = host;
+
   const [profile, setProfile] = useState("");
   const [nameUser, setNameUser] = useState("");
   const [emailUser, setEmailUser] = useState("");
   const [logout, setLogout] = useState(false);
   const [photoModal, setPhotoModal] = useState(false);
 
-  //pegar os dados dos usuarios
+  // Função para acessar sessionStorage de forma segura
+  const getSessionStorage = (key: string) => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem(key);
+    }
+    return null;
+  };
+
+  const setSessionStorage = (key: string, value: string) => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(key, value);
+    }
+  };
+
+  const removeSessionStorage = (key: string) => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(key);
+    }
+  };
+
+  // Pegar os dados dos usuários
   useEffect(() => {
-    socket.emit(
-      "getProfileData",
-      { Token: "Bearer " + sessionStorage.getItem("token") },
-      (resp) => {
+    const token = getSessionStorage("token");
+    if (token) {
+      socket.emit("getProfileData", { Token: "Bearer " + token }, (resp) => {
         const { email, icon, name } = resp;
-        console.log(email, icon, name);
-        sessionStorage.setItem("nameProfile", name);
-        sessionStorage.setItem("emailProfile", email);
-        sessionStorage.setItem("iconProfile", icon);
-        setProfile((prevState) => {
-          return `${BaseURL}/userprofile/${icon}`;
-        });
-        let xName = name.split(" ");
-        let firstName = xName[0];
-        // if(firstName.length > 8) {
-        // setNameUser(prevState => firstName.replace(firstName[5], "..."))
-        // } else { setNameUser(prevState => firstName) }
-        setNameUser((prevState) => name); // pega o nome todo do usuário
+        setSessionStorage("nameProfile", name);
+        setSessionStorage("emailProfile", email);
+        setSessionStorage("iconProfile", icon);
 
+        setProfile(`${BaseURL}/userprofile/${icon}`);
+        setNameUser(name);
         setEmailUser(email);
-      }
-    );
-  }, []);
+      });
+    }
+  }, [socket, BaseURL]);
 
-  // aqui basicamente é onde rola a magic, onde quando você clicar
-  // envia o nome da imagem e dá uma replace na que estava antes
+  // Função para trocar a imagem do perfil
+  const addImg = (e) => {
+    let fileImg = e.target.files;
+    var allowedExtensions = /(\.jpg|\.jpeg|\.png|\.gif)$/i;
+
+    if (allowedExtensions.exec(e.target.value)) {
+      if (fileImg[0].size > 500000) {
+        alert("O arquivo é maior que 500kb");
+      } else {
+        const newImage = confirm("Tem certeza que deseja trocar de imagem?");
+        if (newImage) {
+          const token = getSessionStorage("token");
+          if (token) {
+            let formData = new FormData();
+            formData.append("file", fileImg[0]);
+
+            axios
+              .post(BaseURL + "/ProfileImageUpload", formData, {
+                headers: {
+                  Authorization: "Bearer " + token,
+                  "Content-Type": "multipart/form-data",
+                },
+              })
+              .then((response) => {
+                setSessionStorage("iconProfile", response.data.filename);
+                setProfile(`${BaseURL}/userprofile/${response.data.filename}`);
+              });
+          }
+        }
+      }
+    } else {
+      alert("O arquivo enviado não é uma imagem válida.");
+    }
+  };
+
+  // Trocar bichos
   const bixos = [
     "aguia",
     "bicho_preguica",
@@ -74,72 +118,35 @@ export const Profile = () => {
     "zebra",
   ];
 
-  const addImg = (e) => {
-    // console.log(e.target.value, "arquivo")
-    let fileImg = e.target.files; // filename, extension -> esse é o array completo
-    // console.log(fileImg[0].size, "arquivo")
-    var allowedExtensions = /(\.jpg|\.jpeg|\.png|\.gif)$/i; // formatos válidos
-
-    console.log(fileImg[0]);
-
-    // verify extension file
-    if (allowedExtensions.exec(e.target.value)) {
-      // alert(`O arquivo ${fileImg} é imagem!`)
-      if (fileImg[0].size > 500000) {
-        alert("O arquivo é maior que 500kb");
-      } else {
-        // alert("Upload em andamento...");
-        const newImage = confirm("Tem certeza que deseja trocar de imagem?");
-        if (newImage == true) {
-          // aqui é onde deve começar o processo de upload...
-          const token = sessionStorage.getItem("token");
-          let formData = new FormData();
-          formData.append("file", fileImg[0]);
-          console.log(formData);
-          axios
-            .post(BaseURL + "/ProfileImageUpload", formData, {
-              headers: {
-                Authorization: "Bearer " + token,
-                "Content-Type": "multipart/form-data",
-              },
-            })
-            .then((response) => {
-              
-                sessionStorage.setItem("iconProfile", response.data.filename)
-                setProfile((prevState) => {
-                  return `${BaseURL}/userprofile/${response.data.filename}`;
-                });
-            });
-        }
-      }
-    } else {
-      alert("Falha, o arquivo enviado não é uma imagem...");
-    }
-  };
   const changeBichos = (bicho) => {
-    socket.emit(
-      "changeAnimalProfile",
-      { Token: "Bearer " + sessionStorage.getItem("token"), animal: bicho },
-      (resp) => {
-        sessionStorage.setItem("iconProfile", resp);
-        setProfile((prevState) => {
-          return `${BaseURL}/userprofile/${resp}`;
-        });
-      }
-    );
+    const token = getSessionStorage("token");
+    if (token) {
+      socket.emit(
+        "changeAnimalProfile",
+        { Token: "Bearer " + token, animal: bicho },
+        (resp) => {
+          setSessionStorage("iconProfile", resp);
+          setProfile(`${BaseURL}/userprofile/${resp}`);
+        }
+      );
+    }
   };
 
   const changeName = (e) => {
-    setNameUser((PrevState) => e.target.value);
+    setNameUser(e.target.value);
   };
+
   const sendNewName = () => {
-    socket.emit(
-      "changeUserName",
-      { name: nameUser, Token: "Bearer " + sessionStorage.getItem("token") },
-      (res) => {
-        sessionStorage.setItem("nameProfile", res);
-      }
-    );
+    const token = getSessionStorage("token");
+    if (token) {
+      socket.emit(
+        "changeUserName",
+        { name: nameUser, Token: "Bearer " + token },
+        (res) => {
+          setSessionStorage("nameProfile", res);
+        }
+      );
+    }
   };
 
   return (
@@ -157,18 +164,13 @@ export const Profile = () => {
             <span>
               Criado em{" "}
               {new Date(
-                sessionStorage.getItem("profileWasCreated_at")
+                getSessionStorage("profileWasCreated_at") || ""
               ).toLocaleDateString("pt-br")}
-            </span>{" "}
-            {/* É para puxar a data de criação do perfil */}
+            </span>
           </div>
           <div className="profile-img">
-            <img src={profile} />
-            <span
-              onClick={() => {
-                setPhotoModal(!photoModal);
-              }}
-            >
+            <img src={profile} alt="Perfil" />
+            <span onClick={() => setPhotoModal(!photoModal)}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -180,59 +182,43 @@ export const Profile = () => {
               </svg>
             </span>
           </div>
-          <div
-            className="set-images modal"
-            style={{
-              display: photoModal ? "initial" : "none",
-            }}
-          >
-            <div
-              className="close-modal"
-              onClick={() => {
-                setPhotoModal(!photoModal);
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-x"
-                viewBox="0 0 16 16"
-              >
-                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
-              </svg>
-            </div>
-            <div className="header">
-              <strong>Selecione um bichinho ou </strong>
-              <input type="file" name="file" onChange={addImg} />
-            </div>
-            <div className="content">
-              <div className="bixos">
-                {bixos.map((img) => {
-                  return (
+          {photoModal && (
+            <div className="set-images modal">
+              <div className="close-modal" onClick={() => setPhotoModal(false)}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  className="bi bi-x"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+              </div>
+              <div className="header">
+                <strong>Selecione um bichinho ou </strong>
+                <input type="file" name="file" onChange={addImg} />
+              </div>
+              <div className="content">
+                <div className="bixos">
+                  {bixos.map((img) => (
                     <img
-                      // src={pathProfile.concat(img + ".png")}
+                      key={img}
                       src={`${BaseURL}/userprofile/${img}.png`}
-                      onClick={() => {
-                        changeBichos(img + ".png");
-                      }}
+                      alt={img}
+                      onClick={() => changeBichos(img + ".png")}
                     />
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </C.FeaturedProfile>
+
         <C.Options>
           <div>
-            <span
-              onClick={() => {
-                // const token = sessionStorage.removeItem("token");
-                // router.push("/login");
-                setLogout(true);
-              }}
-            >
+            <span onClick={() => setLogout(true)}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -253,28 +239,23 @@ export const Profile = () => {
           </div>
         </C.Options>
       </C.Container>
-      <C.Logout logout={logout}>
-        <h3>Tem certeza que deseja encerrar esta sessão?</h3>
-        <div className="options">
-          <button
-            onClick={() => {
-              const token = sessionStorage.removeItem("token");
-              router.push("/login");
-            }}
-          >
-            <p>Sim</p>
-            <p>Sair</p>
-          </button>
-          <button
-            onClick={() => {
-              setLogout(false);
-            }}
-          >
-            <p>Não</p>
-            <p>Cancelar</p>
-          </button>
-        </div>
-      </C.Logout>
+
+      {logout && (
+        <C.Logout logout={logout}>
+          <h3>Tem certeza que deseja encerrar esta sessão?</h3>
+          <div className="options">
+            <button
+              onClick={() => {
+                removeSessionStorage("token");
+                router.push("/login");
+              }}
+            >
+              Sim, Sair
+            </button>
+            <button onClick={() => setLogout(false)}>Não, Cancelar</button>
+          </div>
+        </C.Logout>
+      )}
     </>
   );
 };

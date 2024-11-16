@@ -6,7 +6,8 @@ import { useRouter } from "next/router";
 
 import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-const pathSignUp = "/assets/Sign_Up/Sign_Up.png"
+import { host } from "../utils/host";
+const pathSignUp = "/assets/Sign_Up/Sign_Up.png";
 
 // Erro ao validar valor dos formulários ( atribuições JSX )
 const Error = ({ error, animateError }) => {
@@ -19,7 +20,7 @@ const Error = ({ error, animateError }) => {
 
 export default function Cadastrar() {
   // importando server
-  const BaseURL = process.env.HOST_CLIENTSERVER || "http://ec2-3-17-183-122.us-east-2.compute.amazonaws.com:5000";
+  const BaseURL = host;
   // router
   const router = useRouter();
 
@@ -51,22 +52,24 @@ export default function Cadastrar() {
 
   const [messageErro, setMessageErro] = useState<JSX.Element>();
   const [animateError, persistedError] = useState(false);
-  function showError() { 
-    persistedError(!animateError) 
+  function showError() {
+    persistedError(!animateError);
   }
 
   const handleRegisterUsers = () => {
     let erro = "Preenchimento dos campos obrigatório!";
 
     // validação de email
-    /** 
-     * Ex: (yourname) @ (domain) . (extension)(.again) 
+    /**
+     * Ex: (yourname) @ (domain) . (extension)(.again)
      * yourname - can be letter, numbers, dots and/or hyphens
      * domain - can be letters, numbers and/or hyphens
      * extension - (.) any letters
-     * .again (occasionally) - (.) then any letters 
-    */
-     const regex = new RegExp(/[a-zA-Z0-9._%+-]+@[a-z0-9•-]+\.[a-z]{2,8}(.[a-z{2,8}])?/g)
+     * .again (occasionally) - (.) then any letters
+     */
+    const regex = new RegExp(
+      /[a-zA-Z0-9._%+-]+@[a-z0-9•-]+\.[a-z]{2,8}(.[a-z{2,8}])?/g
+    );
 
     if (
       Iname === "" ||
@@ -74,19 +77,26 @@ export default function Cadastrar() {
       Ipassword === "" ||
       IValidatePassword === ""
     ) {
-      showError()
+      showError();
       setMessageErro(<Error animateError={animateError} error={erro} />);
     } else if (Ipassword.length < 8) {
-      showError()
+      showError();
       setMessageErro(
-        <Error animateError={animateError} error={"A senha deve conter ao menos 8 caracteres"} />
+        <Error
+          animateError={animateError}
+          error={"A senha deve conter ao menos 8 caracteres"}
+        />
       );
     } else if (IValidatePassword !== Ipassword) {
-      showError()
-      setMessageErro(<Error animateError={animateError} error={"Senhas incorretas!"} />);
+      showError();
+      setMessageErro(
+        <Error animateError={animateError} error={"Senhas incorretas!"} />
+      );
     } else if (regex.test(Iemail) == false) {
-      showError()
-      setMessageErro(<Error animateError={animateError} error={"Email inválido"} />)
+      showError();
+      setMessageErro(
+        <Error animateError={animateError} error={"Email inválido"} />
+      );
     } else {
       const data = {
         name: Iname,
@@ -102,20 +112,16 @@ export default function Cadastrar() {
           router.push("/login");
         })
         .catch((error) => {
-
           if (error.response) {
             console.log(error.response.data);
             console.log(error.response.status);
             // console.log(error.response.headers);
             erro = error.response.data.error;
           }
-         
-          showError()
+
+          showError();
           setMessageErro(<Error animateError={animateError} error={erro} />);
           console.log(error.toJSON());
-          
-         
-     
         });
     }
   };

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useContext } from "react";
 import SocketContext from "../../contexts/SocketContext";
 import * as C from "./styles";
 import FormData from "form-data";
+import { host } from "../../utils/host";
 
 export const Images = ({ imageId, data }) => {
   const socket = useContext(SocketContext);
@@ -12,7 +13,7 @@ export const Images = ({ imageId, data }) => {
     setUrl vai mudar tanto com o link quanto do upload, sendo do upload o 
     nome da imagem sendo salva no banco e no diretório `/public/upload/images/rooms`
     */
-  const BaseURL = process.env.HOST_CLIENTSERVER || "http://ec2-3-17-183-122.us-east-2.compute.amazonaws.com:5000";
+  const BaseURL = host;
   const [urlImage, setUrlImage] = useState("");
   const [url, setUrl] = useState(data.path);
   const [viewImageContent, setViewImageContent] = useState(true);
@@ -28,7 +29,7 @@ export const Images = ({ imageId, data }) => {
       if (data.imageId === imageId) {
         setUrl(data.link);
         setUrlImage(data.link);
-        setViewImage(true)
+        setViewImage(true);
         setViewEmbedImage(false);
       }
     });

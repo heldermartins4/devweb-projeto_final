@@ -13,10 +13,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { Images } from "../Images";
 import { CheckList } from "../CheckList";
+import { host } from "../../utils/host";
 
 export const Document = () => {
   // const [loading, setLoading] = useState(false)
-  const BaseURL = process.env.HOST_CLIENTSERVER || "http://ec2-3-17-183-122.us-east-2.compute.amazonaws.com:5000";
+  const BaseURL = host;
 
   const pathProfile = BaseURL + "/userprofile";
   // const imageIcon = "image-solid.svg";
@@ -290,10 +291,16 @@ export const Document = () => {
             className="members"
             onClick={() => {
               setAddMember(!addMember);
-              socket.emit("GetMembersControllerInRoom", {
-                currentRoom: sessionStorage.getItem("currentRoom"),
-                token: "Bearer " + sessionStorage.getItem("token"),
-              },(data)=>{console.log(data)});
+              socket.emit(
+                "GetMembersControllerInRoom",
+                {
+                  currentRoom: sessionStorage.getItem("currentRoom"),
+                  token: "Bearer " + sessionStorage.getItem("token"),
+                },
+                (data) => {
+                  console.log(data);
+                }
+              );
             }}
           >
             {" "}
@@ -312,7 +319,6 @@ export const Document = () => {
               <button
                 onClick={() => {
                   setAddMember(!addMember);
-                 
                 }}
               >
                 <svg
@@ -357,9 +363,7 @@ export const Document = () => {
                               setSelectMembers((s) => false);
                             }}
                           >
-                            <img
-                              src={pathProfile + d.img}
-                            />
+                            <img src={pathProfile + d.img} />
                             {d.email}
                           </span>
                         );

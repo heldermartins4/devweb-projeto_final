@@ -1,20 +1,19 @@
 import * as C from "../../styles/ModalWorkspace/styles";
 import * as M from "../SelectMembers/styles";
 
-import {
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { useContext, useEffect, useState } from "react";
 import { ThemeContext } from "styled-components";
 import SocketContext from "../../contexts/SocketContext";
+import { host } from "../../utils/host";
 
 type Props = {
   handleClose: () => void;
 };
 
-const BaseURL = process.env.HOST_CLIENTSERVER || "http://ec2-3-17-183-122.us-east-2.compute.amazonaws.com:5000"
+const BaseURL = host;
 const pathProfile = BaseURL + "/userprofile/";
 
 export const ModalWorkspace = ({ handleClose }: Props) => {
@@ -65,7 +64,7 @@ export const CreateDocument = ({ handleClose }: Props, props) => {
     if (email != "" && email != null) {
       const dado = {
         email: email,
-        token:  "Bearer " +  sessionStorage.getItem("token")
+        token: "Bearer " + sessionStorage.getItem("token"),
       };
 
       socket.emit("getMembers", dado, (emails) => {

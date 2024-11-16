@@ -8,7 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import axios from "axios";
 import { useRouter } from "next/router";
-const pathSignUp = "/assets/Sign_In/Sign_In.png"
+import { host } from "../utils/host";
+const pathSignUp = "/assets/Sign_In/Sign_In.png";
 
 // Erro ao validar valor dos formulários ( atribuições JSX )
 const Error = ({ error, animateError }) => {
@@ -21,7 +22,7 @@ const Error = ({ error, animateError }) => {
 
 export default function Login() {
   // importando server
-  const BaseURL = process.env.HOST_CLIENTSERVER || "http://ec2-3-17-183-122.us-east-2.compute.amazonaws.com:5000";
+  const BaseURL = host;
   // router
   const router = useRouter();
 
@@ -46,15 +47,15 @@ export default function Login() {
 
   const [messageErro, setMessageErro] = useState<JSX.Element>();
   const [animateError, persistedError] = useState(false);
-  function showError() { 
-    persistedError(!animateError) 
+  function showError() {
+    persistedError(!animateError);
   }
 
   const authUser = () => {
     let erro = "Preenchimento dos campos obrigatório!";
 
     if (Iemail === "" || Ipassword === "") {
-      showError()
+      showError();
       setMessageErro(<Error animateError={animateError} error={erro} />);
     } else {
       const data = {
@@ -79,8 +80,8 @@ export default function Login() {
             // console.log(error.response.headers);
             erro = error.response.data.error;
           }
-         
-          showError()
+
+          showError();
           setMessageErro(<Error animateError={animateError} error={erro} />);
           console.log(error.toJSON());
         });
@@ -93,12 +94,13 @@ export default function Login() {
     }
   };
 
-  useEffect(() => { // verifica se existe o token de autenticação
+  useEffect(() => {
+    // verifica se existe o token de autenticação
     const token = sessionStorage.getItem("token");
     if (token) {
-        router.push("/workspace");
+      router.push("/workspace");
     }
-  }, [])
+  }, []);
 
   return (
     <C.Container onKeyDown={pressEnter}>
@@ -132,10 +134,11 @@ export default function Login() {
                   value={Ipassword}
                   onChange={handleInputChangePassword}
                 />
-                <div className="showPassword">                
-                  <input type="checkbox" onClick={togglePassword} /><label>Mostrar senha</label>
+                <div className="showPassword">
+                  <input type="checkbox" onClick={togglePassword} />
+                  <label>Mostrar senha</label>
                 </div>
-                <button onClick={authUser} >Entrar</button>
+                <button onClick={authUser}>Entrar</button>
                 <p>
                   Não possui uma conta?{" "}
                   <Link href="/cadastrar">

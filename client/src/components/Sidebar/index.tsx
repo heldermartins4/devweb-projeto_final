@@ -3,16 +3,14 @@ import React, { useContext, useEffect } from "react";
 import * as C from "./styles";
 import { ThemeContext } from "styled-components";
 
-import {
-  faBars,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { useState } from "react";
 import SocketContext from "../../contexts/SocketContext";
+import { host } from "../../utils/host";
 
 const Logo_Cubs = "/assets/Icons-Cubs/CubsLogo.png";
 
@@ -40,7 +38,7 @@ export const Sidebar: React.FC<Props> = ({
   const [logout, setLogout] = useState(false);
 
   // const [mobileMenu, setMobileMenu] = useState(false);
-  const BaseURL = process.env.HOST_CLIENTSERVER || "http://ec2-3-17-183-122.us-east-2.compute.amazonaws.com:5000";
+  const BaseURL = host;
   const [profile, setProfile] = useState(
     "https://www.shareicon.net/data/128x128/2016/08/05/806962_user_512x512.png"
   );
@@ -58,16 +56,14 @@ export const Sidebar: React.FC<Props> = ({
       "getProfileData",
       { Token: "Bearer " + sessionStorage.getItem("token") },
       (resp) => {
-        const { email, icon, name,created_at } = resp;
+        const { email, icon, name, created_at } = resp;
         // console.log(email,icon, name)
         sessionStorage.setItem("nameProfile", name);
         sessionStorage.setItem("emailProfile", email);
         sessionStorage.setItem("iconProfile", icon);
-        sessionStorage.setItem("profileWasCreated_at",created_at)
+        sessionStorage.setItem("profileWasCreated_at", created_at);
         setProfile((prevState) => {
-       
-            return `${BaseURL}/userprofile/${icon}`;
-        
+          return `${BaseURL}/userprofile/${icon}`;
         });
         let xName = name.split(" ");
         let firstName = xName[0];
