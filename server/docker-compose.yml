@@ -1,0 +1,30 @@
+services:
+  app:
+    image: node:18
+    command: sh -c "yarn && yarn migrate:prod && yarn dev:prod"
+    ports:
+      - 5000:5000
+    working_dir: /cubs
+    volumes:
+      - ./:/cubs
+    expose:
+      - 5000
+    networks:
+      - network
+  mysql:
+    image: mysql:8.1.0
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_USER: cubsuser
+      MYSQL_PASSWORD: cubs1234
+      MYSQL_ROOT_PASSWORD: cubs1234
+      MYSQL_DATABASE: cubs2022
+    networks:
+      - network
+networks:
+  network:
+volumes:
+  mysql-data:

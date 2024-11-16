@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+      "baseUrl": "./",                                
+    "paths": {
+      "@controllers/*":["src/controllers/*"],
+      "@middleware/*":["src/middleware/*"],
+      "@database/*":["src/database/*"]
+          },     
+      "sourceMap": true,
+      "outDir": "dist",
+      "strict": false,
+      "lib": ["esnext"],   // "es2021",
+      "esModuleInterop": true
+    }
+  }
